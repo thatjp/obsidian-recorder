@@ -1,19 +1,25 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
+import { CustomView, VIEW_TYPE_EXAMPLE } from './CustomView'
+
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface VideoRecorderPluginSettings {
 	mySetting: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: VideoRecorderPluginSettings = {
 	mySetting: 'default'
 }
 
-export default class HelloWorldPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class VideoRecorderPlugin extends Plugin {
+	settings: VideoRecorderPluginSettings;
 
 	async onload() {
+		this.registerView(
+      VIEW_TYPE_EXAMPLE,
+      (leaf) => new CustomView(leaf)
+    );
 		await this.loadSettings();
 
 		this.addRibbonIcon('dice', 'Greet', () => {
@@ -83,7 +89,7 @@ export default class HelloWorldPlugin extends Plugin {
 	}
 
 	onunload() {
-
+		
 	}
 
 	async loadSettings() {
@@ -112,9 +118,9 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: VideoRecorderPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: VideoRecorderPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
