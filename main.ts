@@ -1,4 +1,9 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import * as React from 'react';
+import { StrictMode } from 'react';
+import { Root, createRoot } from 'react-dom/client';
+import { VideoRecorder } from './src/components/VideoRecorder';
+import { AppContext } from './src/context';
 
 import { CustomView, VIEW_TYPE_EXAMPLE } from './CustomView'
 
@@ -34,6 +39,11 @@ export default class VideoRecorderPlugin extends Plugin {
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
+		// Video recorder ribbon icon
+		this.addRibbonIcon('video', 'Start video recording', () => {
+			new VideoRecorderModal(this.app).open();
+		});
+
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status Bar Text');
@@ -44,6 +54,15 @@ export default class VideoRecorderPlugin extends Plugin {
 			name: 'Open sample modal (simple)',
 			callback: () => {
 				new SampleModal(this.app).open();
+			}
+		});
+
+		// Video recorder command
+		this.addCommand({
+			id: 'start-video-recording',
+			name: 'Start video recording',
+			callback: () => {
+				new VideoRecorderModal(this.app).open();
 			}
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
@@ -80,11 +99,8 @@ export default class VideoRecorderPlugin extends Plugin {
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
+
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
@@ -113,6 +129,44 @@ class SampleModal extends Modal {
 
 	onClose() {
 		const {contentEl} = this;
+		contentEl.empty();
+	}
+}
+
+class VideoRecorderModal extends Modal {
+	root: Root | null = null;
+
+	constructor(app: App) {
+		super(app);
+	}
+
+	onOpen() {
+		const {contentEl} = this;
+		contentEl.empty();
+		
+		// Create a container for React
+		const reactContainer = contentEl.createDiv();
+		this.root = createRoot(reactContainer);
+		
+		this.root.render(
+			React.createElement(
+				StrictMode,
+				null,
+				React.createElement(
+					AppContext.Provider,
+					{ value: this.app },
+					React.createElement(VideoRecorder, { onClose: () => this.close() })
+				)
+			)
+		);
+	}
+
+	onClose() {
+		const {contentEl} = this;
+		if (this.root) {
+			this.root.unmount();
+			this.root = null;
+		}
 		contentEl.empty();
 	}
 }
